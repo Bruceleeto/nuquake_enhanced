@@ -38,7 +38,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "glext.h"
 #endif
 
-extern uint32_t pvr_mem_available(void);
 extern void malloc_stats(void);
 extern void pvr_mem_stats(void);
 #else

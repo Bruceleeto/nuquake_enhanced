@@ -30,7 +30,6 @@ void BitmapLoad(char *path, GLuint *temp_tex);
 void glScaleF(float x, float y, float z);
 void GL_Set2D(void);
 
-extern uint32_t pvr_mem_available(void);
 extern void malloc_stats(void);
 
 extern unsigned int char_texture;
@@ -481,13 +480,9 @@ void DrawGLScene() {
 
 static char cmdline[256];
 char *menu(int *argc, char **argv, char **basedirs, int num_dirs) {
-#ifdef _arch_dreamcast
-  printf("PVR Mem left:%u\n", (unsigned int)pvr_mem_available());
-#ifdef GL_EXT_dreamcast_yalloc
-  printf("GL Mem left:%u\n", (unsigned int)glGetFreeVRAM_INTERNAL_KOS());
-#endif
+
   malloc_stats();
-#endif
+
 
   gamelist = malloc(sizeof(gamelist_t));
   int i, found = 0;
@@ -589,13 +584,8 @@ char *menu(int *argc, char **argv, char **basedirs, int num_dirs) {
 
   free_gamelist();
 
-#ifdef _arch_dreamcast
-  printf("PVR Mem left:%u\n", (unsigned int)pvr_mem_available());
-#ifdef GL_EXT_dreamcast_yalloc
-  printf("GL Mem left:%u\n", (unsigned int)glGetFreeVRAM_INTERNAL_KOS());
-#endif
+
   malloc_stats();
-#endif
 
   return basedirs[found];
 }
