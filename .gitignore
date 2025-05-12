@@ -59,3 +59,4 @@ build_dc/src/vm/pr_cmds.c.o
 build_dc/src/vm/pr_edict.c.o
 build_dc/src/vm/pr_exec.c.o
 1ST_READ.BIN
+quake.cdi
