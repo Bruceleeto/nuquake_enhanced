@@ -1216,10 +1216,11 @@ void R_SetupFrame(void) {
   c_alias_polys = 0;
 }
 
+/*  
 void MYgluPerspective(GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloat zFar) {
   GLfloat xmin, xmax, ymin, ymax;
 
-  ymax = zNear * tanf(fovy * M_PI / 360.0f);
+  ymax = zNear * tanf(fovy * M_PI / 180.0f / 2.0f);  // Fixed: 180 not 360, and divide by 2
   ymin = -ymax;
 
   xmin = ymin * aspect;
@@ -1227,6 +1228,7 @@ void MYgluPerspective(GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloat zFar)
 
   glFrustum(xmin, xmax, ymin, ymax, zNear, zFar);
 }
+ */
 
 /*
 =============
@@ -1268,12 +1270,22 @@ void R_SetupGL(void) {
 
   glViewport(glx + x, gly + y2, w, h);
   screenaspect = (float)r_refdef.vrect.width / r_refdef.vrect.height;
-  #if 0
-  //float yfov = 2 * atanf((float)r_refdef.vrect.height / r_refdef.vrect.width) * 180 / M_PI;
-  //gluPerspective(yfov, screenaspect, 4, 4096);
-  //MYgluPerspective(r_refdef.fov_y, screenaspect, 4, 4096);
-  #endif
-  MYgluPerspective(r_refdef.fov_y, screenaspect,  4, 4096);
+  
+  // Fixed perspective calculation
+  float fovy_rad = r_refdef.fov_y * M_PI / 180.0f;
+  float f = 1.0f / tanf(fovy_rad / 2.0f);
+  float zNear = 4.0f;
+  float zFar = 4096.0f;
+  float aspect = screenaspect;
+  
+  float proj[16] = {0};
+  proj[0] = f / aspect;  // [0][0]
+  proj[5] = f;           // [1][1] 
+  proj[10] = (zFar + zNear) / (zNear - zFar);      // [2][2]
+  proj[11] = -1.0f;      // [2][3]
+  proj[14] = (2.0f * zFar * zNear) / (zNear - zFar); // [3][2]
+  
+  glLoadMatrixf(proj);
 
   //
   // set drawing parms
@@ -1286,20 +1298,13 @@ void R_SetupGL(void) {
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  //return; //@Note: what is this here for?!?
-
-  mat4 model_temp = GLM_MAT4_IDENTITY_INIT;
-
-  glm_rotate_x(model_temp, DEG2RAD(-90.0f), model_temp);  // put Z going up
-  glm_rotate_z(model_temp, DEG2RAD(90), model_temp);      // put Z going up
-
-  glm_rotate_x(model_temp, DEG2RAD(-r_refdef.viewangles[2]), model_temp);
-  glm_rotate_y(model_temp, DEG2RAD(-r_refdef.viewangles[0]), model_temp);
-  glm_rotate_z(model_temp, DEG2RAD(-r_refdef.viewangles[1]), model_temp);
-
-  glm_translate(model_temp, (vec3){-r_refdef.vieworg[0], -r_refdef.vieworg[1], -r_refdef.vieworg[2]});
-
-  glLoadMatrixf((float *)model_temp);
+  
+  glRotatef(-90, 1, 0, 0);    // put Z going up
+  glRotatef(90, 0, 0, 1);     // put Z going up
+  glRotatef(-r_refdef.viewangles[2], 1, 0, 0);
+  glRotatef(-r_refdef.viewangles[0], 0, 1, 0);
+  glRotatef(-r_refdef.viewangles[1], 0, 0, 1);
+  glTranslatef(-r_refdef.vieworg[0], -r_refdef.vieworg[1], -r_refdef.vieworg[2]);
 
   glDisable(GL_BLEND);
   glEnable(GL_DEPTH_TEST);
